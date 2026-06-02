@@ -1,4 +1,15 @@
-# Network Intrusion Detection — CNN + Transformer Ensemble
+# 🛡️ Network Intrusion Detection
+
+> Detecting network attacks with a CNN + Transformer ensemble on CIC-IDS2017
+> CS 7357: Neural Networks and Deep Learning — Fall 2025
+> Kennesaw State University
+
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.17-FF6F00)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3-F7931E)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.30-FF4B4B)
+
+## 🎯 Project overview
 
 Detecting network attacks from flow records using a deep learning ensemble,
 benchmarked honestly against a strong classical baseline.
@@ -18,7 +29,7 @@ averaged into a soft-voting ensemble.
 > CIC-IDS2017 CSVs into `data/raw/` and rerun. The whole point of the design is
 > that nothing else changes when you do.
 
-## Why this project is built the way it is
+## 🧠 Why this project is built the way it is
 
 Most intrusion-detection demos report 99% accuracy and stop there. That number
 is misleading: the dataset is roughly 80% benign, so a model that flags nothing
@@ -45,7 +56,7 @@ the traffic. The scaler is fit on the training split only, then applied to
 validation and test — fitting on everything is the most common silent mistake
 in student ML projects, and it inflates every number.
 
-## Architecture
+## 🏗️ Architecture
 
 ![Model ensemble structure](assets/ensemble.svg)
 
@@ -53,7 +64,7 @@ The CNN stacks two 1D-convolution layers (local burst patterns). The
 Transformer projects the features, adds sinusoidal positional encoding, and
 runs two self-attention encoder blocks (long-range patterns across the window).
 
-## Quickstart
+## 🚀 Quickstart
 
 ```bash
 pip install -r requirements.txt
@@ -76,7 +87,7 @@ streamlit run app/intrusion_dashboard.py
 
 Tests: `pytest -q`
 
-## Using the real dataset
+## 📊 Using the real dataset
 
 Download CIC-IDS2017 (Canadian Institute for Cybersecurity), put the CSVs in
 `data/raw/`, delete the synthetic file, and rerun from step 2. If the real data
@@ -84,7 +95,7 @@ yields a different feature count after dropping identifiers, update
 `NUM_FEATURES` in `config.py` (the preprocessing script prints the count it
 ends with).
 
-## Repository layout
+## 📁 Repository layout
 
 ```
 config.py                  all paths, shapes, and hyperparameters
@@ -100,7 +111,7 @@ assets/                    README diagrams (pipeline.svg, ensemble.svg)
 docs/PIPELINE_REFERENCE.md step-by-step map of pipeline to code (interview prep)
 ```
 
-## Limitations
+## ⚠️ Limitations
 
 This is a research/portfolio project, not a production IDS. Worth knowing:
 
@@ -115,6 +126,6 @@ This is a research/portfolio project, not a production IDS. Worth knowing:
   separable classes for testability. Treat the out-of-the-box metrics as a
   smoke test, not a result.
 
-## License
+## 📄 License
 
 MIT — see `LICENSE`.
