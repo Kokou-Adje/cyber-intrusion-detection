@@ -1,0 +1,16 @@
+# Core
+numpy>=1.26,<2.0
+pandas>=2.0
+scikit-learn>=1.3
+joblib>=1.3
+
+# Deep learning (CPU build; swap for `tensorflow` if you have a GPU)
+tensorflow-cpu>=2.17,<2.18
+keras>=3.0
+
+# Evaluation + demo
+matplotlib>=3.7
+streamlit>=1.30
+
+# Tests
+pytest>=7.4

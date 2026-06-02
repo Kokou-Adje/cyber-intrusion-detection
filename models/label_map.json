@@ -1,0 +1,7 @@
+{
+  "Benign": 0,
+  "DDoS": 1,
+  "DoS": 2,
+  "Probe": 3,
+  "WebAttack": 4
+}

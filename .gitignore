@@ -1,0 +1,21 @@
+# Data — never commit the dataset (it's large and you don't own it)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Trained artifacts (regenerate with `python -m src.train`)
+models/*.keras
+models/*.pkl
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
