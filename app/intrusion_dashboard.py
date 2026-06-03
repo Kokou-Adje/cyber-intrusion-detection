@@ -1,10 +1,11 @@
 """
-Streamlit dashboard for the per-flow intrusion detection ensemble.
+Streamlit dashboard for per-flow intrusion detection.
 
-Loads the trained CNN + Transformer + fitted scaler and classifies a single
-network flow, showing the alert decision, predicted class, confidence, and the
-full probability breakdown. Three input modes: sample from the held-out test
-set, upload a CSV, or generate a random flow.
+Loads the trained Random Forest (the best-performing model in this project) and
+the fitted scaler, and classifies a single network flow, showing the alert
+decision, predicted class, confidence, and the full probability breakdown.
+Three input modes: sample from the held-out test set, upload a CSV, or generate
+a random flow.
 
     streamlit run app/intrusion_dashboard.py
 """
@@ -19,47 +20,52 @@ import streamlit as st
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import config
-import keras
 
 st.set_page_config(page_title="Intrusion Detection", page_icon="🛡️", layout="wide")
+
+RF_PATH = config.MODELS_DIR / "rf_baseline.pkl"
 
 
 @st.cache_resource
 def load_artifacts():
-    """Load models, scaler, and label names once and cache them."""
-    missing = [p for p in (config.CNN_PATH, config.TRANSFORMER_PATH,
-                           config.SCALER_PATH, config.LABEL_MAP_PATH)
+    """Load the Random Forest, scaler, and label names once and cache them."""
+    missing = [p for p in (RF_PATH, config.SCALER_PATH, config.LABEL_MAP_PATH)
                if not Path(p).exists()]
     if missing:
         return None
-    cnn = keras.models.load_model(config.CNN_PATH)
-    trans = keras.models.load_model(config.TRANSFORMER_PATH)
+    rf = joblib.load(RF_PATH)
     scaler = joblib.load(config.SCALER_PATH)
     with open(config.LABEL_MAP_PATH) as f:
         label_map = json.load(f)
     names = [n for n, _ in sorted(label_map.items(), key=lambda kv: kv[1])]
-    return cnn, trans, scaler, names
+    return rf, scaler, names
 
 
-def predict(cnn, trans, names, flow_scaled):
-    """Soft-vote the two models. flow_scaled: (1, NUM_FEATURES)."""
-    p = (cnn.predict(flow_scaled, verbose=0) + trans.predict(flow_scaled, verbose=0)) / 2.0
-    p = p[0]
-    idx = int(p.argmax())
-    return names[idx], float(p[idx]), p
+def predict(rf, names, flow_scaled):
+    """Predict with the Random Forest. flow_scaled: (1, NUM_FEATURES).
+
+    rf.predict_proba returns columns for the classes the forest saw in training;
+    we scatter them into a full vector over all classes so the chart lines up.
+    """
+    p_raw = rf.predict_proba(flow_scaled)[0]
+    proba = np.zeros(len(names), dtype=float)
+    for col, cls in enumerate(rf.classes_):
+        proba[int(cls)] = p_raw[col]
+    idx = int(proba.argmax())
+    return names[idx], float(proba[idx]), proba
 
 
 st.title("🛡️ Network Intrusion Detection")
-st.caption(f"CNN + Transformer soft-voting ensemble, classifying one network "
-           f"flow of {config.NUM_FEATURES} features at a time.")
+st.caption(f"Random Forest classifier (the project's best model), classifying "
+           f"one network flow of {config.NUM_FEATURES} features at a time.")
 
 artifacts = load_artifacts()
 if artifacts is None:
-    st.warning("Models not found. Run the pipeline first:\n\n"
+    st.warning("Model not found. Run the pipeline first:\n\n"
                "```\npython -m src.preprocess\npython -m src.train\n```")
     st.stop()
 
-cnn, trans, scaler, names = artifacts
+rf, scaler, names = artifacts
 
 with st.sidebar:
     st.header("Input")
@@ -93,7 +99,7 @@ else:
     flow = rng.random((1, config.NUM_FEATURES)).astype("float32")
     flow_scaled = scaler.transform(flow)
 
-label, confidence, proba = predict(cnn, trans, names, flow_scaled)
+label, confidence, proba = predict(rf, names, flow_scaled)
 is_attack = label != "Benign"
 
 c1, c2 = st.columns(2)
