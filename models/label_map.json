@@ -1,7 +1,11 @@
 {
   "Benign": 0,
-  "DDoS": 1,
-  "DoS": 2,
-  "Probe": 3,
-  "WebAttack": 4
+  "Botnet": 1,
+  "BruteForce": 2,
+  "DDoS": 3,
+  "DoS": 4,
+  "Heartbleed": 5,
+  "Infiltration": 6,
+  "Other": 7,
+  "Probe": 8
 }

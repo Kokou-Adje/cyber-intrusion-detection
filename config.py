@@ -18,9 +18,11 @@ LABEL_MAP_PATH = MODELS_DIR / "label_map.json"
 CNN_PATH = MODELS_DIR / "cnn_model.keras"
 TRANSFORMER_PATH = MODELS_DIR / "transformer_model.keras"
 
-# --- Sequence / feature shape ----------------------------------------------
-SEQ_LEN = 15        # N flows per sequence (your report's N=15)
-NUM_FEATURES = 78   # features kept after dropping identifiers (84 -> 78)
+# --- Feature shape ----------------------------------------------------------
+# CIC-IDS2017's machine-learning CSVs classify ONE network flow at a time
+# (they carry no source-IP/timestamp context, so time-ordered sequences aren't
+# meaningful on this data - per-flow is the standard, honest approach here).
+NUM_FEATURES = 76   # numeric features kept after dropping identifiers + label
 
 # --- Label handling ---------------------------------------------------------
 # CIC-IDS2017 has ~15 raw labels. We collapse them into coarse families so the

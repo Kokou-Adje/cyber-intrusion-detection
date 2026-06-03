@@ -1,10 +1,10 @@
 """
-Streamlit dashboard for the intrusion detection ensemble.
+Streamlit dashboard for the per-flow intrusion detection ensemble.
 
-Loads the trained CNN + Transformer + fitted scaler and classifies a flow
-sequence, showing the alert decision, the predicted class, confidence, and the
+Loads the trained CNN + Transformer + fitted scaler and classifies a single
+network flow, showing the alert decision, predicted class, confidence, and the
 full probability breakdown. Three input modes: sample from the held-out test
-set, upload a CSV, or generate a random benign-like sequence.
+set, upload a CSV, or generate a random flow.
 
     streamlit run app/intrusion_dashboard.py
 """
@@ -20,7 +20,6 @@ import streamlit as st
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import config
 import keras
-from src.models import PositionalEncoding  # noqa: F401  (registers custom layer)
 
 st.set_page_config(page_title="Intrusion Detection", page_icon="🛡️", layout="wide")
 
@@ -42,33 +41,31 @@ def load_artifacts():
     return cnn, trans, scaler, names
 
 
-def predict(cnn, trans, names, seq_scaled):
-    """Soft-vote the two models. seq_scaled: (1, SEQ_LEN, NUM_FEATURES)."""
-    p = (cnn.predict(seq_scaled, verbose=0) + trans.predict(seq_scaled, verbose=0)) / 2.0
+def predict(cnn, trans, names, flow_scaled):
+    """Soft-vote the two models. flow_scaled: (1, NUM_FEATURES)."""
+    p = (cnn.predict(flow_scaled, verbose=0) + trans.predict(flow_scaled, verbose=0)) / 2.0
     p = p[0]
     idx = int(p.argmax())
     return names[idx], float(p[idx]), p
 
 
 st.title("🛡️ Network Intrusion Detection")
-st.caption("CNN + Transformer soft-voting ensemble over flow sequences "
-           f"of shape ({config.SEQ_LEN}, {config.NUM_FEATURES}).")
+st.caption(f"CNN + Transformer soft-voting ensemble, classifying one network "
+           f"flow of {config.NUM_FEATURES} features at a time.")
 
 artifacts = load_artifacts()
 if artifacts is None:
     st.warning("Models not found. Run the pipeline first:\n\n"
-               "```\npython -m src.synthetic_data\npython -m src.preprocess\n"
-               "python -m src.train\n```")
+               "```\npython -m src.preprocess\npython -m src.train\n```")
     st.stop()
 
 cnn, trans, scaler, names = artifacts
 
 with st.sidebar:
     st.header("Input")
-    mode = st.radio("Sequence source",
-                    ["Sample from test set", "Upload CSV", "Random sequence"])
+    mode = st.radio("Flow source",
+                    ["Sample from test set", "Upload CSV", "Random flow"])
 
-seq = None  # will hold an unscaled (SEQ_LEN, NUM_FEATURES) array
 if mode == "Sample from test set":
     test_path = config.PROCESSED_DIR / "X_test.npy"
     if not test_path.exists():
@@ -76,30 +73,27 @@ if mode == "Sample from test set":
         st.stop()
     X_test = np.load(test_path)
     y_test = np.load(config.PROCESSED_DIR / "y_test.npy")
-    i = st.sidebar.slider("Test sequence index", 0, len(X_test) - 1, 0)
-    seq = X_test[i]                       # already scaled
-    seq_scaled = seq[None, ...]
+    i = st.sidebar.slider("Test flow index", 0, len(X_test) - 1, 0)
+    flow_scaled = X_test[i][None, :]                 # already scaled
     st.sidebar.info(f"True label: **{names[int(y_test[i])]}**")
 elif mode == "Upload CSV":
     up = st.sidebar.file_uploader(
-        f"CSV with {config.NUM_FEATURES} feature columns "
-        f"and >= {config.SEQ_LEN} rows", type="csv")
+        f"CSV with {config.NUM_FEATURES} numeric feature columns", type="csv")
     if up is None:
-        st.info("Upload a CSV to score it.")
+        st.info("Upload a CSV to score its first row.")
         st.stop()
     df = pd.read_csv(up).select_dtypes(include=[np.number])
-    if df.shape[1] != config.NUM_FEATURES or len(df) < config.SEQ_LEN:
-        st.error(f"Need {config.NUM_FEATURES} numeric columns and "
-                 f">= {config.SEQ_LEN} rows. Got {df.shape}.")
+    if df.shape[1] != config.NUM_FEATURES:
+        st.error(f"Need {config.NUM_FEATURES} numeric columns. Got {df.shape[1]}.")
         st.stop()
-    seq = df.to_numpy()[-config.SEQ_LEN:].astype("float32")
-    seq_scaled = scaler.transform(seq).reshape(1, config.SEQ_LEN, config.NUM_FEATURES)
+    flow = df.to_numpy()[0:1].astype("float32")      # score the first row
+    flow_scaled = scaler.transform(flow)
 else:
     rng = np.random.default_rng()
-    seq = rng.random((config.SEQ_LEN, config.NUM_FEATURES)).astype("float32")
-    seq_scaled = scaler.transform(seq).reshape(1, config.SEQ_LEN, config.NUM_FEATURES)
+    flow = rng.random((1, config.NUM_FEATURES)).astype("float32")
+    flow_scaled = scaler.transform(flow)
 
-label, confidence, proba = predict(cnn, trans, names, seq_scaled)
+label, confidence, proba = predict(cnn, trans, names, flow_scaled)
 is_attack = label != "Benign"
 
 c1, c2 = st.columns(2)
@@ -114,6 +108,6 @@ with c2:
 st.subheader("Class probabilities")
 st.bar_chart(pd.DataFrame({"probability": proba}, index=names))
 
-with st.expander("Show the scaled input sequence"):
-    st.dataframe(pd.DataFrame(seq_scaled[0],
+with st.expander("Show the scaled input flow"):
+    st.dataframe(pd.DataFrame(flow_scaled,
                               columns=[f"f{i}" for i in range(config.NUM_FEATURES)]))

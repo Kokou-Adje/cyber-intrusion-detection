@@ -38,7 +38,6 @@ from sklearn.metrics import (accuracy_score, classification_report,
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import config
 import keras
-from src.models import PositionalEncoding  # noqa: F401  (registers custom layer for load)
 
 
 def load_test():
@@ -59,7 +58,7 @@ def rf_proba(rf, X, n_classes):
     rf.classes_ tells us which columns map to which class id, so we scatter
     them into a full (n_samples, n_classes) matrix for fair comparison.
     """
-    p = rf.predict_proba(X.reshape(len(X), -1))
+    p = rf.predict_proba(X)
     full = np.zeros((len(X), n_classes), dtype=np.float32)
     for col, cls in enumerate(rf.classes_):
         full[:, int(cls)] = p[:, col]

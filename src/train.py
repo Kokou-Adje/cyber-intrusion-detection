@@ -34,7 +34,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 import config
 import keras
 from keras import callbacks
-# Importing the models module also registers the custom PositionalEncoding layer.
+# Import the model builders (also pulls in any custom layers).
 from src.models import build_cnn, build_transformer
 
 
@@ -67,7 +67,7 @@ def train_baseline(X_train, y_train):
         n_estimators=200, n_jobs=-1, class_weight="balanced",
         random_state=config.RANDOM_SEED,            # reproducible
     )
-    rf.fit(X_train.reshape(len(X_train), -1), y_train)
+    rf.fit(X_train, y_train)
     joblib.dump(rf, config.MODELS_DIR / "rf_baseline.pkl")
     print(f"trained in {time.time() - t0:.1f}s -> models/rf_baseline.pkl")
     return rf
