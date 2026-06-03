@@ -31,8 +31,8 @@
 
   <!-- 5 Build sequences -->
   <rect x="250" y="292" width="180" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
-  <text x="340" y="312" text-anchor="middle" font-size="14" font-weight="500" fill="#04342C">5. Build sequences</text>
-  <text x="340" y="328" text-anchor="middle" font-size="12" fill="#0F6E56">15-flow windows by IP</text>
+  <text x="340" y="312" text-anchor="middle" font-size="14" font-weight="500" fill="#04342C">5. Feature matrix</text>
+  <text x="340" y="328" text-anchor="middle" font-size="12" fill="#0F6E56">one row per flow</text>
   <line x1="340" y1="336" x2="340" y2="358" stroke="#73726c" stroke-width="1.5" marker-end="url(#arrow)"/>
 
   <!-- Leakage boundary -->

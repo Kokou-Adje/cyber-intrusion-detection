@@ -1,0 +1,34 @@
+[
+  {
+    "model": "Random Forest",
+    "accuracy": 0.998344440918227,
+    "macro_recall": 0.8956537456759798,
+    "macro_f1": 0.924613024837273,
+    "weighted_f1": 0.9983330630196595,
+    "attack_fpr": 0.0009896295730591645
+  },
+  {
+    "model": "CNN",
+    "accuracy": 0.8613984978313762,
+    "macro_recall": 0.9368326856025148,
+    "macro_f1": 0.5744184889187782,
+    "weighted_f1": 0.9063362888005075,
+    "attack_fpr": 0.1599476864624402
+  },
+  {
+    "model": "Transformer",
+    "accuracy": 0.08266687823971226,
+    "macro_recall": 0.2844719329371401,
+    "macro_f1": 0.13223392177585958,
+    "weighted_f1": 0.07852428373553547,
+    "attack_fpr": 1.0
+  },
+  {
+    "model": "Ensemble (soft vote)",
+    "accuracy": 0.8569924891568814,
+    "macro_recall": 0.9358228948385237,
+    "macro_f1": 0.5929344790102186,
+    "weighted_f1": 0.901890160543701,
+    "attack_fpr": 0.16500720743081343
+  }
+]
